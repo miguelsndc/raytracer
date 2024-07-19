@@ -22,9 +22,10 @@ pub mod canvas {
         }
 
         pub fn write_pixel(&mut self, x: f32, y: f32, color: Color) {
-            let index = (x * self.height as f32 + y) as usize;
-            let cap = (self.width * self.height) as usize;
-            if index < cap {
+            println!("{}, {}", x, y);
+            let index = (y as i32 * self.height + y as i32) as usize;
+            println!("i: {}", index);
+            if x < self.width as f32 && x >= 0. && y < self.height as f32 && y >= 0. {
                 self.grid[index] = color;
             }
         }

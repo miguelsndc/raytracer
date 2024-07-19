@@ -24,14 +24,19 @@ fn tick(env: &mut Environment, proj: &mut Projectile) {
     proj.velocity += env.gravity + env.wind;
 }
 
+fn in_bounds(v: &Projectile, low: f32, high: f32) -> bool {
+    return v.position.x >=low && v.position.x < high && v.position.y >= low && v.position.y < high;
+}
+
+
 fn main() {
     let mut p = Projectile {
-        position: Vec4::new(0.0, 0.0, 0.0),
-        velocity: normalize(&Vec4::new(1.0, 1.8, 0.0)) * 11.25,
+        position: Vec4::new(0.0, (HEIGHT - 1) as f32 , 0.0),
+        velocity: normalize(&Vec4::new(1.0, -9.0, 0.0)) * 6.0,
     };
 
     let mut e = Environment {
-        gravity: Vec4::new(0.0, -0.098, 0.0),
+        gravity: Vec4::new(0.0, -0.1, 0.0),
         wind: Vec4::new(-0.01, 0.0, 0.0),
     };
 
@@ -43,13 +48,10 @@ fn main() {
         b: 0.8,
     };
 
-    while p.position.x < WIDTH as f32 {
-        tick(&mut e, &mut p);
+
+    while in_bounds(&p, 0.0, 255.0){
+        tick(&mut e,&mut p);
         canvas.write_pixel(p.position.x, p.position.y, color);
     }
-
-    match canvas.to_ppm() {
-        Ok(_) => println!("ok"),
-        Err(e) => eprintln!("Error writing to ppm: {}", e),
-    };
+    let _ =    canvas.to_ppm();
 }
