@@ -25,31 +25,31 @@ fn tick(env: &mut Environment, proj: &mut Projectile) {
 }
 
 fn in_bounds(v: &Projectile, low: f32, high: f32) -> bool {
-    return v.position.x >=low && v.position.x < high && v.position.y >= low && v.position.y < high;
+    return v.position.x >= low && v.position.x < high && v.position.y >= low && v.position.y < high;
 }
 
 
 fn main() {
     let mut p = Projectile {
-        position: Vec4::new(0.0, (HEIGHT - 1) as f32 , 0.0),
-        velocity: normalize(&Vec4::new(1.0, -9.0, 0.0)) * 6.0,
+        position: Vec4::new(0.0, 0.0, 0.0),
+        velocity: normalize(&Vec4::new(3.0, 0.0, 0.0)) ,
     };
 
     let mut e = Environment {
-        gravity: Vec4::new(0.0, -0.1, 0.0),
-        wind: Vec4::new(-0.01, 0.0, 0.0),
+        gravity: Vec4::new(0.0, 0.3, 0.0),
+        wind: Vec4::new(0.2, 1.0, 0.0),
     };
 
     let mut canvas = Canvas::new(WIDTH, HEIGHT);
     
     let color = Color {
-        r: 0.4,
-        g: 0.3,
-        b: 0.8,
+        r: 1.0,
+        g: 0.0,
+        b: 0.0,
     };
 
 
-    while in_bounds(&p, 0.0, 255.0){
+    while in_bounds(&p, 0.0, 256.0){
         tick(&mut e,&mut p);
         canvas.write_pixel(p.position.x, p.position.y, color);
     }
