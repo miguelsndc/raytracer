@@ -2,10 +2,21 @@ pub mod vec4 {
     use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
     #[derive(Debug, Copy, Clone, PartialEq)]
     pub struct Vec4 {
-        x: f32,
-        y: f32,
-        z: f32,
-        w: f32,
+        pub x: f32,
+        pub y: f32,
+        pub z: f32,
+        pub w: f32,
+    }
+
+    impl Default for Vec4 {
+        fn default() -> Self {
+            Self {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+                w: 0.0,
+            }
+        }
     }
 
     pub fn dot(v1: &Vec4, v2: &Vec4) -> f32 {
@@ -21,7 +32,6 @@ pub mod vec4 {
         }
     }
 
-
     pub fn magnitude(v: &Vec4) -> f32 {
         return f32::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
     }
@@ -36,21 +46,22 @@ pub mod vec4 {
         }
     }
 
+    
     impl Vec4 {
-        fn magnitude(&self) -> f32 {
+        pub fn magnitude(&self) -> f32 {
             return f32::sqrt(self.x * self.x + self.y * self.y + self.z * self.z);
         }
 
-        fn normalize(&self) -> Self {
+        pub fn normalize(&self) -> Self {
             let mag = self.magnitude();
             return (*self) / mag;
         }
 
-        fn dot(&self, other: &Vec4) -> f32 {
+        pub fn dot(&self, other: &Vec4) -> f32 {
             return self.x * other.x + self.y * other.y + self.z * other.z + self.w * other.w;
         }
-
-        fn cross(&self, other: &Vec4) -> Vec4 {
+        
+        pub fn cross(&self, other: &Vec4) -> Vec4 {
             Vec4 {
                 x: self.y * other.z - self.z * other.y,
                 y: self.z * other.x - self.x * other.z,
@@ -58,6 +69,15 @@ pub mod vec4 {
                 w: 0.0,
             }
         }
+
+        pub fn new(x: f32, y: f32, z: f32) -> Vec4 {
+                Vec4 {
+                    x,
+                    y,
+                    z,
+                    w: 1.0,
+                }
+            }
     }
 
     // operators
