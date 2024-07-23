@@ -1,7 +1,5 @@
-use crate::primitives::float;
-use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
-
 use super::float::ApproxEq;
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Color {

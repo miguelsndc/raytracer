@@ -2,15 +2,15 @@ use super::{float::ApproxEq, tuple::Tuple};
 use std::ops::{Add, AddAssign, BitXor, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Clone, Copy, Debug)]
-pub struct Vector {
+pub struct Vec3 {
     x: f64,
     y: f64,
     z: f64,
 }
 
-impl Tuple for Vector {
+impl Tuple for Vec3 {
     fn new(x: f64, y: f64, z: f64) -> Self {
-        return Vector { x, y, z };
+        return Vec3 { x, y, z };
     }
 
     fn zero() -> Self {
@@ -38,7 +38,7 @@ impl Tuple for Vector {
     }
 }
 
-impl Vector {
+impl Vec3 {
     pub fn magnitude(&self) -> f64 {
         return f64::sqrt(self.x * self.x + self.y * self.y + self.z * self.z);
     }
@@ -48,7 +48,7 @@ impl Vector {
     }
 }
 
-impl PartialEq for Vector {
+impl PartialEq for Vec3 {
     fn eq(&self, other: &Self) -> bool {
         return self.x.approx_eq_low_precision(other.x)
             && self.y.approx_eq_low_precision(other.y)
@@ -57,7 +57,7 @@ impl PartialEq for Vector {
 }
 // Operators --------------------------------
 
-impl Add for Vector {
+impl Add for Vec3 {
     type Output = Self;
     fn add(self, rhs: Self) -> Self {
         Self {
@@ -68,7 +68,7 @@ impl Add for Vector {
     }
 }
 
-impl AddAssign for Vector {
+impl AddAssign for Vec3 {
     fn add_assign(&mut self, rhs: Self) {
         *self = Self {
             x: self.x + rhs.x,
@@ -78,7 +78,7 @@ impl AddAssign for Vector {
     }
 }
 
-impl Sub for Vector {
+impl Sub for Vec3 {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self {
         Self {
@@ -89,7 +89,7 @@ impl Sub for Vector {
     }
 }
 
-impl SubAssign for Vector {
+impl SubAssign for Vec3 {
     fn sub_assign(&mut self, rhs: Self) {
         *self = Self {
             x: self.x - rhs.x,
@@ -99,7 +99,7 @@ impl SubAssign for Vector {
     }
 }
 
-impl Mul<f64> for Vector {
+impl Mul<f64> for Vec3 {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self {
         Self {
@@ -110,7 +110,7 @@ impl Mul<f64> for Vector {
     }
 }
 
-impl MulAssign<f64> for Vector {
+impl MulAssign<f64> for Vec3 {
     fn mul_assign(&mut self, rhs: f64) {
         *self = Self {
             x: self.x * rhs,
@@ -121,7 +121,7 @@ impl MulAssign<f64> for Vector {
 }
 
 // Implements Cross product, non-commutative.
-impl Mul for Vector {
+impl Mul for Vec3 {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self {
         Self {
@@ -133,14 +133,14 @@ impl Mul for Vector {
 }
 
 // Implements dot product
-impl BitXor for Vector {
+impl BitXor for Vec3 {
     type Output = f64;
     fn bitxor(self, rhs: Self) -> f64 {
         return self.x * rhs.x + self.y * rhs.y + self.z * rhs.z;
     }
 }
 
-impl Div<f64> for Vector {
+impl Div<f64> for Vec3 {
     type Output = Self;
     fn div(self, rhs: f64) -> Self {
         Self {
@@ -151,7 +151,7 @@ impl Div<f64> for Vector {
     }
 }
 
-impl DivAssign<f64> for Vector {
+impl DivAssign<f64> for Vec3 {
     fn div_assign(&mut self, rhs: f64) {
         *self = Self {
             x: self.x / rhs,
@@ -161,7 +161,7 @@ impl DivAssign<f64> for Vector {
     }
 }
 
-impl Neg for Vector {
+impl Neg for Vec3 {
     type Output = Self;
     fn neg(self) -> Self {
         Self {
@@ -177,25 +177,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn vector_four_operations() {
-        let v1 = Vector::new(1.0, 2.0, 3.0);
-        let v2 = Vector::new(2.0, 3.0, 4.0);
+    fn vec3_four_operations() {
+        let v1 = Vec3::new(1.0, 2.0, 3.0);
+        let v2 = Vec3::new(2.0, 3.0, 4.0);
 
         let vadd = v1 + v2;
         let vsub = v1 - v2;
         let vmul = v1 * 2.0;
         let vdiv = v1 / 2.0;
 
-        assert_eq!(vadd, Vector::new(3.0, 5.0, 7.0));
-        assert_eq!(vsub, Vector::new(-1.0, -1.0, -1.0));
-        assert_eq!(vmul, Vector::new(2.0, 4.0, 6.0));
-        assert_eq!(vdiv, Vector::new(0.5, 1.0, 1.5));
+        assert_eq!(vadd, Vec3::new(3.0, 5.0, 73.0));
+        assert_eq!(vsub, Vec3::new(-1.0, -1.0, -13.0));
+        assert_eq!(vmul, Vec3::new(2.0, 4.0, 63.0));
+        assert_eq!(vdiv, Vec3::new(0.5, 1.0, 13.0));
     }
 
     #[test]
     fn dot_product() {
-        let v1 = Vector::new(1.0, 2.0, 3.0);
-        let v2 = Vector::new(2.0, 3.0, 4.0);
+        let v1 = Vec3::new(1.0, 2.0, 3.0);
+        let v2 = Vec3::new(2.0, 3.0, 4.0);
         let dot = v1 ^ v2;
 
         assert_eq!(dot, 20.0);
@@ -203,19 +203,19 @@ mod tests {
 
     #[test]
     fn magnitude() {
-        let v1 = Vector::new(1.0, 0.0, 0.0);
+        let v1 = Vec3::new(1.0, 0.0, 0.0);
         assert_eq!(v1.magnitude(), 1.0);
     }
 
     #[test]
     fn normalization() {
-        let v1 = Vector::new(1.0, 2.0, 3.0);
+        let v1 = Vec3::new(1.0, 2.0, 3.0);
         assert_eq!(v1.normalize(), v1 / v1.magnitude());
     }
 
     #[test]
     fn magnitude_of_normalized_vector() {
-        let v1 = Vector::new(1.0, 2.0, 3.0);
+        let v1 = Vec3::new(1.0, 2.0, 3.0);
         let normal_v1 = v1.normalize();
 
         assert_eq!(normal_v1.magnitude(), 1.0);
@@ -223,14 +223,14 @@ mod tests {
 
     #[test]
     fn cross_product() {
-        let v1 = Vector::new(1.0, 2.0, 3.0);
-        let v2 = Vector::new(2.0, 3.0, 4.0);
+        let v1 = Vec3::new(1.0, 2.0, 3.0);
+        let v2 = Vec3::new(2.0, 3.0, 4.0);
 
         let cross = v1 * v2;
         let cross_rev = v2 * v1;
 
-        assert_eq!(cross, Vector::new(-1.0, 2.0, -1.0));
-        assert_eq!(cross_rev, Vector::new(1.0, -2.0, 1.0));
+        assert_eq!(cross, Vec3::new(-1.0, 2.0, -13.0));
+        assert_eq!(cross_rev, Vec3::new(1.0, -2.0, 13.0));
         assert_eq!(cross ^ v1, 0.0);
         assert_eq!(cross ^ v2, 0.0);
     }
