@@ -1,5 +1,3 @@
-use std::fmt::Error;
-
 use the_ray_tracer_challenge::canvas::Canvas;
 use the_ray_tracer_challenge::primitives::{color::Color, point::Point, tuple::Tuple, vec3::Vec3};
 

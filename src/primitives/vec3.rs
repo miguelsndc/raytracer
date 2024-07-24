@@ -34,7 +34,7 @@ impl Tuple for Vec3 {
     }
 
     fn w(&self) -> f64 {
-        0.0
+        1.0
     }
 }
 
@@ -120,6 +120,17 @@ impl MulAssign<f64> for Vec3 {
     }
 }
 
+impl Neg for Vec3 {
+    type Output = Self;
+    fn neg(self) -> Self {
+        Self {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+        }
+    }
+}
+
 // Implements Cross product, non-commutative.
 impl Mul for Vec3 {
     type Output = Self;
@@ -161,17 +172,6 @@ impl DivAssign<f64> for Vec3 {
     }
 }
 
-impl Neg for Vec3 {
-    type Output = Self;
-    fn neg(self) -> Self {
-        Self {
-            x: -self.x,
-            y: -self.y,
-            z: -self.z,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -186,10 +186,10 @@ mod tests {
         let vmul = v1 * 2.0;
         let vdiv = v1 / 2.0;
 
-        assert_eq!(vadd, Vec3::new(3.0, 5.0, 73.0));
-        assert_eq!(vsub, Vec3::new(-1.0, -1.0, -13.0));
-        assert_eq!(vmul, Vec3::new(2.0, 4.0, 63.0));
-        assert_eq!(vdiv, Vec3::new(0.5, 1.0, 13.0));
+        assert_eq!(vadd, Vec3::new(3.0, 5.0, 7.0));
+        assert_eq!(vsub, Vec3::new(-1.0, -1.0, -1.0));
+        assert_eq!(vmul, Vec3::new(2.0, 4.0, 6.0));
+        assert_eq!(vdiv, Vec3::new(0.5, 1.0, 1.5));
     }
 
     #[test]
@@ -229,8 +229,8 @@ mod tests {
         let cross = v1 * v2;
         let cross_rev = v2 * v1;
 
-        assert_eq!(cross, Vec3::new(-1.0, 2.0, -13.0));
-        assert_eq!(cross_rev, Vec3::new(1.0, -2.0, 13.0));
+        assert_eq!(cross, Vec3::new(-1.0, 2.0, -1.0));
+        assert_eq!(cross_rev, Vec3::new(1.0, -2.0, 1.0));
         assert_eq!(cross ^ v1, 0.0);
         assert_eq!(cross ^ v2, 0.0);
     }
