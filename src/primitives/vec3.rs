@@ -34,7 +34,7 @@ impl Tuple for Vec3 {
     }
 
     fn w(&self) -> f64 {
-        1.0
+        0.0
     }
 }
 
