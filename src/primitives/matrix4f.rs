@@ -1,6 +1,6 @@
 use crate::primitives::{float::ApproxEq, matrix3f::Matrix3f, tuple::Tuple};
 
-const MATRIX_SIZE: usize = 4;
+pub const MATRIX_SIZE: usize = 4;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Matrix4f {
@@ -20,64 +20,6 @@ impl Matrix4f {
                 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
             ],
         }
-    }
-
-    pub fn translate(tx: f64, ty: f64, tz: f64) -> Matrix4f {
-        let mut trans = Matrix4f::identity();
-        trans[(0, MATRIX_SIZE - 1)] = tx;
-        trans[(1, MATRIX_SIZE - 1)] = ty;
-        trans[(2, MATRIX_SIZE - 1)] = tz;
-        return trans;
-    }
-
-    pub fn scale(sx: f64, sy: f64, sz: f64) -> Matrix4f {
-        let mut sc = Matrix4f::identity();
-        sc[(0, 0)] = sx;
-        sc[(1, 1)] = sy;
-        sc[(2, 2)] = sz;
-        return sc;
-    }
-
-    pub fn rotate_y(radians: f64) -> Matrix4f {
-        let mut rotation = Matrix4f::identity();
-
-        let cos = f64::cos(radians);
-        let sin = f64::sin(radians);
-
-        rotation[(0, 0)] = cos;
-        rotation[(0, 2)] = sin;
-        rotation[(2, 0)] = -sin;
-        rotation[(2, 2)] = cos;
-
-        return rotation;
-    }
-
-    pub fn rotate_x(radians: f64) -> Matrix4f {
-        let mut rotation = Matrix4f::identity();
-
-        let cos = f64::cos(radians);
-        let sin = f64::sin(radians);
-
-        rotation[(1, 1)] = cos;
-        rotation[(2, 2)] = cos;
-        rotation[(2, 1)] = sin;
-        rotation[(1, 2)] = -sin;
-
-        return rotation;
-    }
-
-    pub fn rotate_z(radians: f64) -> Matrix4f {
-        let mut rotation = Matrix4f::identity();
-
-        let cos = f64::cos(radians);
-        let sin = f64::sin(radians);
-
-        rotation[(0, 0)] = cos;
-        rotation[(1, 1)] = cos;
-        rotation[(0, 1)] = -sin;
-        rotation[(1, 0)] = sin;
-
-        return rotation;
     }
 
     pub fn new_from(layout: [[f64; MATRIX_SIZE]; MATRIX_SIZE]) -> Self {
@@ -165,6 +107,7 @@ impl Matrix4f {
         return Some(inverse);
     }
 }
+
 impl PartialEq for Matrix4f {
     fn eq(&self, other: &Self) -> bool {
         for i in 0..MATRIX_SIZE {
@@ -220,30 +163,28 @@ where
     T: Tuple,
 {
     type Output = T;
-    fn mul(self, rhs: T) -> T {
-        let x = self[(0, 0)] * rhs.x()
-            + self[(0, 1)] * rhs.y()
-            + self[(0, 2)] * rhs.z()
-            + self[(0, 3)] * rhs.w();
-        let y = self[(1, 0)] * rhs.x()
-            + self[(1, 1)] * rhs.y()
-            + self[(1, 2)] * rhs.z()
-            + self[(1, 3)] * rhs.w();
-        let z = self[(2, 0)] * rhs.x()
-            + self[(2, 1)] * rhs.y()
-            + self[(2, 2)] * rhs.z()
-            + self[(2, 3)] * rhs.w();
-
-        return T::new(x, y, z);
+    fn mul(self, rhs: T) -> Self::Output {
+        return Self::Output::new(
+            self[(0, 0)] * rhs.x()
+                + self[(0, 1)] * rhs.y()
+                + self[(0, 2)] * rhs.z()
+                + self[(0, 3)] * rhs.w(),
+            self[(1, 0)] * rhs.x()
+                + self[(1, 1)] * rhs.y()
+                + self[(1, 2)] * rhs.z()
+                + self[(1, 3)] * rhs.w(),
+            self[(2, 0)] * rhs.x()
+                + self[(2, 1)] * rhs.y()
+                + self[(2, 2)] * rhs.z()
+                + self[(2, 3)] * rhs.w(),
+        );
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use core::f64;
-
     use super::*;
-    use crate::primitives::{point::Point, vec3::Vec3};
+    use crate::primitives::point::Point;
 
     #[test]
     fn matrix4f_initialization() {
@@ -452,65 +393,5 @@ mod tests {
 
         let i = b.invert().unwrap() * b;
         assert_eq!(i, Matrix4f::identity());
-    }
-
-    #[test]
-    fn matrix4f_translates() {
-        let t = Matrix4f::translate(5.0, -3.0, 2.0);
-        let p = Point::new(-3.0, 4.0, 5.0);
-
-        assert_eq!(t * p, Point::new(2.0, 1.0, 7.0));
-    }
-
-    #[test]
-    fn matrix4f_inverse_of_translate_goes_in_opposite_direction() {
-        let t = Matrix4f::translate(5.0, -3.0, 2.0);
-        let inv = t.invert().unwrap();
-        let p = Point::new(-3.0, 4.0, 5.0);
-
-        assert_eq!(inv * p, Point::new(-8.0, 7.0, 3.0));
-    }
-
-    #[test]
-    fn matrix4f_vector_preserved_by_translation() {
-        let t = Matrix4f::translate(5.0, -3.0, 2.0);
-        let p = Vec3::new(-3.0, 4.0, 5.0);
-        assert_eq!(t * p, p);
-    }
-
-    #[test]
-    // scaling points makes no sense
-    fn matrix4f_scales_vector() {
-        let t = Matrix4f::scale(2.0, 3.0, 4.0);
-        let p = Vec3::new(1.0, 2.0, 3.0);
-        assert_eq!(t * p, Vec3::new(2.0, 6.0, 12.0));
-    }
-
-    #[test]
-    fn matrix4f_inverse_of_scale_shrinks_vector() {
-        let t = Matrix4f::scale(2.0, 3.0, 4.0);
-        let inv = t.invert().unwrap();
-        let p = Vec3::new(4.0, 6.0, 8.0);
-        assert_eq!(inv * p, Vec3::new(2.0, 2.0, 2.0));
-    }
-
-    #[test]
-    fn matrix4f_reflection_is_scaling_by_negative_value() {
-        let t = Matrix4f::scale(-1.0, 1.0, 1.0);
-        let p = Vec3::new(4.0, 6.0, 8.0);
-        assert_eq!(t * p, Vec3::new(-4.0, 6.0, 8.0));
-    }
-
-    #[test]
-    fn matrix4f_rotation_around_x() {
-        let p = Point::new(0.0, 1.0, 0.0);
-        let half_q = Matrix4f::rotate_x(f64::consts::FRAC_PI_4);
-        let full_q = Matrix4f::rotate_x(f64::consts::FRAC_PI_2);
-
-        assert_eq!(
-            half_q * p,
-            Point::new(0.0, f64::sqrt(2.0) / 2.0, f64::sqrt(2.0) / 2.0)
-        );
-        assert_eq!(full_q * p, Point::new(0.0, 0.0, 1.0));
     }
 }

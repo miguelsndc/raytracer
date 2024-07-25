@@ -1,54 +1,23 @@
-use the_ray_tracer_challenge::canvas::Canvas;
-use the_ray_tracer_challenge::primitives::{color::Color, point::Point, tuple::Tuple, vec3::Vec3};
+use core::f64;
 
-pub struct Projectile {
-    position: Point,
-    velocity: Vec3,
-}
+use the_ray_tracer_challenge::primitives::color::Color;
+use the_ray_tracer_challenge::primitives::tuple::Tuple;
+use the_ray_tracer_challenge::primitives::vec3::Vec3;
+use the_ray_tracer_challenge::transforms::Transform;
+use the_ray_tracer_challenge::{canvas::Canvas, primitives::point::Point};
 
-pub struct Env {
-    gravity: Vec3,
-    wind: Vec3,
-}
-
-fn tick(proj: &mut Projectile, env: &mut Env) {
-    proj.position = proj.position + proj.velocity;
-    proj.velocity += env.gravity + env.wind;
-}
-
-fn within_bounds(x: f64, y: f64, w: f64, h: f64) -> bool {
-    return x >= 0.0 && x < w && y >= 0.0 && y < h;
-}
-
+const WIDTH: usize = 256;
+const HEIGHT: usize = 256;
 fn main() {
-    let mut c = Canvas::new(256, 256);
-    let start = Point::new(0.0, 1.0, 0.0);
-    let velocity = Vec3::new(1.0, 1.8, 0.0).normalize() * 6.0;
-    let gravity = Vec3::new(0.0, -0.1, 0.0);
-    let wind = Vec3::new(-0.01, 0.0, 0.0);
-
-    let mut p = Projectile {
-        position: start,
-        velocity,
-    };
-
-    let mut e = Env { gravity, wind };
-
-    loop {
-        tick(&mut p, &mut e);
-
-        let x = p.position.x();
-        let y = p.position.y();
-
-        if !within_bounds(x, y, 256.0, 256.0) {
-            break;
-        }
-
-        c[x as usize][y as usize] = Color::green();
+    let mut c = Canvas::new(WIDTH, HEIGHT);
+    let orig = Point::new(WIDTH as f64 / 2.0, HEIGHT as f64 / 2.0, 1.0);
+    c[orig.y() as usize][orig.x() as usize] = Color::blue();
+    let p = orig.translate(30.0, 30.0, 1.0).transform();
+    let mut v = Vec3::new(p.x() - 100.0, p.y() - 100.0, p.z());
+    c[(orig.y() + v.y()) as usize][(orig.x() + v.x()) as usize] = Color::red();
+    for _ in 0..64 {
+        v = v.rotate_z(f64::consts::PI / 32.0).transform();
+        c[(orig.y() + v.y()) as usize][(orig.x() + v.x()) as usize] = Color::green();
     }
-
-    match c.export_to_ppm("output.ppm") {
-        Ok(_) => println!("Ok"),
-        Err(e) => println!("Error: {}", e),
-    }
+    let _ = c.export_to_ppm("output.ppm");
 }

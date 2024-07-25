@@ -9,4 +9,6 @@ pub mod primitives {
     pub mod vec3;
 }
 
+
+pub mod transforms;
 pub mod canvas;
