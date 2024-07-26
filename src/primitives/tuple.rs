@@ -1,4 +1,4 @@
-use crate::transforms::Transform;
+use crate::core::transforms::Transform;
 pub trait Tuple {
     fn new(x: f64, y: f64, z: f64) -> Self;
 

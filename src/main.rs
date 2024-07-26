@@ -1,10 +1,7 @@
 use core::f64;
 
-use the_ray_tracer_challenge::primitives::color::Color;
-use the_ray_tracer_challenge::primitives::tuple::Tuple;
-use the_ray_tracer_challenge::primitives::vec3::Vec3;
-use the_ray_tracer_challenge::transforms::Transform;
-use the_ray_tracer_challenge::{canvas::Canvas, primitives::point::Point};
+use the_ray_tracer_challenge::core::{canvas::Canvas, transforms::Transform};
+use the_ray_tracer_challenge::primitives::{color::Color, vec3::Vec3, tuple::Tuple,point::Point};
 
 const WIDTH: usize = 256;
 const HEIGHT: usize = 256;

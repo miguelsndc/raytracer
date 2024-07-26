@@ -54,3 +54,10 @@ impl std::ops::Add<Vec3> for Point {
         }
     }
 }
+
+impl std::ops::Sub for Point {
+    type Output = Vec3;
+    fn sub(self, rhs: Self) -> Self::Output {
+        return Vec3::new(self.x - rhs.x(), self.y - rhs.y(), self.z - rhs.z());
+    }
+}
