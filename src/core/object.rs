@@ -6,9 +6,9 @@ pub enum Shape {
 }
 
 impl Shape {
-    pub fn intersect<'a>(&self, ray: &Ray, p: &mut impl IntersectionPush<'a>) {
+    pub fn intersect<'a>(&self, ray: &Ray, object: &'a Object, p: &mut Intersections<'a>) {
         match self {
-            Shape::Sphere(s) => s.intersect(ray, p),
+            Shape::Sphere(s) => s.intersect(ray, object, p),
         }
     }
 }
@@ -67,17 +67,6 @@ pub trait IntersectionPush<'a> {
     fn t(&mut self, t: f64);
 }
 
-pub struct RayIntersectionPush<'a> {
-    pub intersections: Intersections<'a>,
-    pub object: &'a Object,
-}
-
-impl<'a> IntersectionPush<'a> for RayIntersectionPush<'a> {
-    fn t(&mut self, t: f64) {
-        self.intersections.push(Intersection::new(t, self.object));
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::primitives::{point::Point, tuple::Tuple, vec3::Vec3};
@@ -114,14 +103,11 @@ mod tests {
         let s = Object::sphere();
         let ray = Ray::new(Point::new(0.0, 0.0, -5.0), Vec3::new(0.0, 0.0, 1.0));
 
-        let mut i = RayIntersectionPush {
-            intersections: Intersections::new(),
-            object: &s,
-        };
+        let mut intersections = Intersections::new();
 
-        s.shape().intersect(&ray, &mut i);
+        s.shape().intersect(&ray, &s, &mut intersections);
 
-        assert_eq!(i.intersections[0].object, &s);
-        assert_eq!(i.intersections[1].object, &s);
+        assert_eq!(intersections[0].object, &s);
+        assert_eq!(intersections[1].object, &s);
     }
 }

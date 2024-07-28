@@ -21,7 +21,7 @@ impl Default for Sphere {
 }
 
 impl Sphere {
-    pub fn intersect<'a>(&self, r: &Ray, push: &mut impl IntersectionPush<'a>) {
+    pub fn intersect<'a>(&self, r: &Ray, object: &'a Object, i: &mut Intersections<'a>) {
         let a = r.direction() ^ r.direction();
         let oc = self.center() - r.origin();
         let b = -2.0 * (r.direction() ^ (oc));
@@ -32,8 +32,8 @@ impl Sphere {
             let t1 = (-b - f64::sqrt(discriminant)) / 2.0 * a;
             let t2 = (-b + f64::sqrt(discriminant)) / 2.0 * a;
 
-            push.t(t1);
-            push.t(t2);
+            i.push(Intersection::new(t1, object));
+            i.push(Intersection::new(t2, object));
         }
     }
 
