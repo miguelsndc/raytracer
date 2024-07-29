@@ -13,6 +13,7 @@ impl Shape {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Intersection<'a> {
     pub t: f64,
     pub object: &'a Object,
@@ -21,6 +22,30 @@ pub struct Intersection<'a> {
 impl<'a> Intersection<'a> {
     pub fn new(t: f64, object: &'a Object) -> Intersection<'a> {
         return Intersection { t, object };
+    }
+}
+
+impl<'a> Eq for Intersection<'a> {}
+
+impl<'a> PartialOrd for Intersection<'a> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        return Some(self.cmp(other));
+    }
+}
+
+impl<'a> Ord for Intersection<'a> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        if self.t.is_nan() {
+            return std::cmp::Ordering::Less;
+        } else if other.t.is_nan() {
+            return std::cmp::Ordering::Greater;
+        } else if self.t < other.t {
+            return std::cmp::Ordering::Less;
+        } else if self.t == other.t {
+            return std::cmp::Ordering::Equal;
+        } else {
+            return std::cmp::Ordering::Greater;
+        }
     }
 }
 
@@ -37,6 +62,25 @@ impl<'a> Intersections<'a> {
         Intersections {
             intersections: Vec::new(),
         }
+    }
+
+    // intersection with the lowest nonnegative t value
+    pub fn hit(&self) -> Option<&Intersection<'a>> {
+        return self.intersections.iter().find(|i| i.t >= 0.0);
+    }
+
+    pub fn from_intersections(from: Vec<Intersection<'a>>) -> Intersections<'a> {
+        let mut container = Intersections::new();
+
+        for i in from {
+            container.push(i);
+        }
+
+        return container;
+    }
+
+    pub fn sort(&mut self) {
+        self.intersections.sort_unstable();
     }
 }
 
@@ -109,5 +153,57 @@ mod tests {
 
         assert_eq!(intersections[0].object, &s);
         assert_eq!(intersections[1].object, &s);
+    }
+
+    #[test]
+    fn hit_with_positive_t_only() {
+        let s = Object::sphere();
+
+        let i1 = Intersection::new(1.0, &s);
+        let i2 = Intersection::new(2.0, &s);
+
+        let i = Intersections::from_intersections(vec![i1, i2]);
+
+        assert_eq!(i.hit().unwrap(), &i1);
+    }
+
+    #[test]
+    fn hit_with_mixed_t_values() {
+        let s = Object::sphere();
+
+        let i1 = Intersection::new(-1.0, &s);
+        let i2 = Intersection::new(1.0, &s);
+
+        let i = Intersections::from_intersections(vec![i1, i2]);
+
+        assert_eq!(i.hit().unwrap(), &i2);
+    }
+
+    #[test]
+    fn hit_with_negative_t_values() {
+        let s = Object::sphere();
+
+        let i1 = Intersection::new(-1.0, &s);
+        let i2 = Intersection::new(-2.0, &s);
+
+        let i = Intersections::from_intersections(vec![i1, i2]);
+
+        assert!(i.hit().is_none());
+    }
+
+    #[test]
+    fn hit_is_always_the_first_nonnegatievable_intersection() {
+        let s = Object::sphere();
+
+        let i1 = Intersection::new(5.0, &s);
+        let i2 = Intersection::new(7.0, &s);
+        let i3 = Intersection::new(-3.0, &s);
+        let i4 = Intersection::new(2.0, &s);
+
+        let mut intersections = Intersections::from_intersections(vec![i1, i2, i3, i4]);
+
+        intersections.sort();
+
+        assert_eq!(intersections.hit(), Some(&i4));
     }
 }

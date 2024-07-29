@@ -1,4 +1,4 @@
-use super::sphere::Sphere;
+use super::{sphere::Sphere, transforms::Transform};
 use crate::primitives::{point::Point, tuple::Tuple, vec3::Vec3};
 
 pub struct Ray {
@@ -39,6 +39,15 @@ impl Ray {
 
     pub fn direction(&self) -> Vec3 {
         return self.direction;
+    }
+}
+
+impl Transform for Ray {
+    fn transform(self, transform: &crate::primitives::matrix4f::Matrix4f) -> Self {
+        return Ray {
+            origin: (*transform) * self.origin,
+            direction: (*transform) * self.direction,
+        };
     }
 }
 
@@ -110,6 +119,24 @@ mod tests {
 
             assert_eq!(xs.0, -6.0);
             assert_eq!(xs.1, -4.0);
+        }
+    }
+
+    #[test]
+    fn ray_transformable() {
+        {
+            let r = Ray::new(Point::new(1.0, 2.0, 3.0), Vec3::new(0.0, 1.0, 0.0));
+            let transformed_ray = r.translate(3.0, 4.0, 5.0).transform();
+
+            assert_eq!(transformed_ray.origin(), Point::new(4.0, 6.0, 8.0));
+            assert_eq!(transformed_ray.direction(), Vec3::new(0.0, 1.0, 0.0));
+        }
+        {
+            let r = Ray::new(Point::new(1.0, 2.0, 3.0), Vec3::new(0.0, 1.0, 0.0));
+            let transformed_ray = r.scale(2.0, 3.0, 4.0).transform();
+
+            assert_eq!(transformed_ray.origin(), Point::new(2.0, 6.0, 12.0));
+            assert_eq!(transformed_ray.direction(), Vec3::new(0.0, 3.0, 0.0));
         }
     }
 }

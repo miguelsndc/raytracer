@@ -1,7 +1,7 @@
-use crate::primitives::{point::Point, tuple::Tuple};
+use crate::primitives::{matrix4f::Matrix4f, point::Point, tuple::Tuple};
 
 use super::{
-    object::{self, Intersection, IntersectionPush, Intersections, Object, Shape},
+    object::{Intersection, Intersections, Object},
     ray::Ray,
 };
 
@@ -9,6 +9,7 @@ use super::{
 pub struct Sphere {
     center: Point,
     radius: f64,
+    transformation: Matrix4f,
 }
 
 impl Default for Sphere {
@@ -16,6 +17,7 @@ impl Default for Sphere {
         return Self {
             center: Point::zero(),
             radius: 1.0,
+            transformation: Matrix4f::identity(),
         };
     }
 }
@@ -38,7 +40,27 @@ impl Sphere {
     }
 
     pub fn new(center: Point, radius: f64) -> Self {
-        Sphere { center, radius }
+        Sphere {
+            center,
+            radius,
+            ..Default::default()
+        }
+    }
+
+    pub fn transformation(&self) -> Matrix4f {
+        return self.transformation;
+    }
+
+    pub fn set_transformation(&mut self, transformation: Matrix4f) {
+        self.transformation = transformation;
+    }
+
+    pub fn new_with_transformation(center: Point, radius: f64, transformation: Matrix4f) -> Self {
+        Sphere {
+            center,
+            radius,
+            transformation,
+        }
     }
 
     pub fn radius(&self) -> f64 {
@@ -52,8 +74,23 @@ impl Sphere {
 
 #[cfg(test)]
 mod tests {
-    use super::Sphere;
+    use crate::core::transforms::Transformations;
+
+    use super::*;
 
     #[test]
-    fn intersection_encapsulates_t_and_object() {}
+    fn sphere_default_transform_is_identity() {
+        let s = Sphere::default();
+        assert_eq!(s.transformation(), Matrix4f::identity())
+    }
+
+    #[test]
+    fn can_change_sphere_transformation() {
+        let mut s = Sphere::default();
+        let t = Transformations::translate(1.0, 2.0, 3.0);
+
+        s.set_transformation(t);
+
+        assert_eq!(s.transformation(), t);
+    }
 }
