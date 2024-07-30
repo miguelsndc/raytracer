@@ -1,4 +1,4 @@
-use crate::primitives::{matrix4f::Matrix4f, point::Point, tuple::Tuple};
+use crate::primitives::{point::Point, tuple::Tuple};
 
 use super::{
     object::{Intersection, Intersections, Object},
@@ -9,7 +9,6 @@ use super::{
 pub struct Sphere {
     center: Point,
     radius: f64,
-    transformation: Matrix4f,
 }
 
 impl Default for Sphere {
@@ -17,7 +16,6 @@ impl Default for Sphere {
         return Self {
             center: Point::zero(),
             radius: 1.0,
-            transformation: Matrix4f::identity(),
         };
     }
 }
@@ -25,14 +23,15 @@ impl Default for Sphere {
 impl Sphere {
     pub fn intersect<'a>(&self, r: &Ray, object: &'a Object, i: &mut Intersections<'a>) {
         let a = r.direction() ^ r.direction();
-        let oc = self.center() - r.origin();
-        let b = -2.0 * (r.direction() ^ (oc));
+        let oc = r.origin() - self.center();
+        let b = 2.0 * (r.direction() ^ (oc));
         let c = (oc ^ oc) - self.radius() * self.radius();
 
-        let discriminant = b * b - 4.0 * a * c;
+        let discriminant = b * b - (4.0 * a * c);
         if discriminant >= 0.0 {
-            let t1 = (-b - f64::sqrt(discriminant)) / 2.0 * a;
-            let t2 = (-b + f64::sqrt(discriminant)) / 2.0 * a;
+            let sqrt_disc = f64::sqrt(discriminant);
+            let t1 = (-b - sqrt_disc) / (2.0 * a);
+            let t2 = (-b + sqrt_disc) / (2.0 * a);
 
             i.push(Intersection::new(t1, object));
             i.push(Intersection::new(t2, object));
@@ -47,20 +46,8 @@ impl Sphere {
         }
     }
 
-    pub fn transformation(&self) -> Matrix4f {
-        return self.transformation;
-    }
-
-    pub fn set_transformation(&mut self, transformation: Matrix4f) {
-        self.transformation = transformation;
-    }
-
-    pub fn new_with_transformation(center: Point, radius: f64, transformation: Matrix4f) -> Self {
-        Sphere {
-            center,
-            radius,
-            transformation,
-        }
+    pub fn new_with_transformation(center: Point, radius: f64) -> Self {
+        Sphere { center, radius }
     }
 
     pub fn radius(&self) -> f64 {
@@ -74,23 +61,111 @@ impl Sphere {
 
 #[cfg(test)]
 mod tests {
-    use crate::core::transforms::Transformations;
+    use crate::{
+        core::transforms::Transformations,
+        primitives::{matrix4f::Matrix4f, vec3::Vec3},
+    };
 
     use super::*;
 
     #[test]
     fn sphere_default_transform_is_identity() {
-        let s = Sphere::default();
-        assert_eq!(s.transformation(), Matrix4f::identity())
+        let s = Object::sphere();
+        assert_eq!(*s.transformation(), Matrix4f::identity());
+    }
+
+    #[test]
+    fn ray_sphere_intersection() {
+        {
+            let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vec3::new(0.0, 0.0, 1.0));
+            let s = Object::sphere();
+
+            let mut i = Intersections::new();
+
+            s.intersect(&r, &mut i);
+
+            assert_eq!(i[0].t, 4.0);
+            assert_eq!(i[1].t, 6.0);
+        }
+        {
+            let r = Ray::new(Point::new(0.0, 1.0, -5.0), Vec3::new(0.0, 0.0, 1.0));
+            let s = Object::sphere();
+
+            let mut i = Intersections::new();
+
+            s.intersect(&r, &mut i);
+
+            assert_eq!(i[0].t, 5.0);
+            assert_eq!(i[1].t, 5.0);
+        }
+        {
+            let r = Ray::new(Point::new(0.0, 2.0, -5.0), Vec3::new(0.0, 0.0, 1.0));
+            let s = Object::sphere();
+
+            let mut i = Intersections::new();
+
+            s.intersect(&r, &mut i);
+
+            assert_eq!(i.len(), 0);
+        }
+        {
+            let r = Ray::new(Point::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 1.0));
+            let s = Object::sphere();
+
+            let mut i = Intersections::new();
+
+            s.intersect(&r, &mut i);
+            assert_eq!(i[0].t, -1.0);
+            assert_eq!(i[1].t, 1.0);
+        }
+        {
+            let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vec3::new(0.0, 0.0, 1.0));
+            let s = Object::sphere();
+
+            let mut i = Intersections::new();
+
+            s.intersect(&r, &mut i);
+
+            assert_eq!(i[0].t, -6.0);
+            assert_eq!(i[1].t, -4.0);
+        }
     }
 
     #[test]
     fn can_change_sphere_transformation() {
-        let mut s = Sphere::default();
+        let mut s = Object::sphere();
         let t = Transformations::translate(1.0, 2.0, 3.0);
 
         s.set_transformation(t);
 
-        assert_eq!(s.transformation(), t);
+        assert_eq!(*s.transformation(), t);
+    }
+
+    #[test]
+    fn intersecting_scaled_sphere_with_ray() {
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vec3::new(0.0, 0.0, 1.0));
+        let mut s = Object::sphere();
+        let mut i = Intersections::new();
+
+        let t = Transformations::scale(2.0, 2.0, 2.0);
+
+        s.set_transformation(t);
+        s.intersect(&r, &mut i);
+
+        assert_eq!(i.len(), 2);
+        assert_eq!(i[0].t, 3.0);
+        assert_eq!(i[1].t, 7.0);
+    }
+
+    #[test]
+    fn intersecting_translated_sphere_with_ray() {
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vec3::new(0.0, 0.0, 1.0));
+        let mut s = Object::sphere();
+        let mut i = Intersections::new();
+
+        s.set_transformation(Transformations::translate(5.0, 0.0, 0.0));
+        s.intersect(&r, &mut i);
+
+        assert_eq!(i.len(), 0);
     }
 }

@@ -1,4 +1,6 @@
-use super::{ray::Ray, sphere::Sphere};
+use crate::primitives::matrix4f::Matrix4f;
+
+use super::{ray::Ray, sphere::Sphere, transforms::Transform};
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub enum Shape {
@@ -64,6 +66,10 @@ impl<'a> Intersections<'a> {
         }
     }
 
+    pub fn len(&self) -> usize {
+        return self.intersections.len();
+    }
+
     // intersection with the lowest nonnegative t value
     pub fn hit(&self) -> Option<&Intersection<'a>> {
         return self.intersections.iter().find(|i| i.t >= 0.0);
@@ -94,12 +100,32 @@ impl<'a> std::ops::Index<usize> for Intersections<'a> {
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub struct Object {
     shape: Shape,
+    transformation: Matrix4f,
+    transformation_inverse: Matrix4f,
 }
 
 impl Object {
     pub fn sphere() -> Self {
         let shape = Shape::Sphere(Sphere::default());
-        return Object { shape };
+        return Object {
+            shape,
+            transformation: Matrix4f::identity(),
+            transformation_inverse: Matrix4f::identity(),
+        };
+    }
+
+    pub fn set_transformation(&mut self, transformation: Matrix4f) {
+        self.transformation = transformation;
+        self.transformation_inverse = transformation.invert().unwrap_or(Matrix4f::identity());
+    }
+
+    pub fn transformation(&self) -> &Matrix4f {
+        return &self.transformation;
+    }
+
+    pub fn intersect<'a>(&'a self, ray: &Ray, i: &mut Intersections<'a>) {
+        let r = (*ray).transform(&self.transformation_inverse);
+        self.shape.intersect(&r, self, i);
     }
 
     pub fn shape(&self) -> Shape {
