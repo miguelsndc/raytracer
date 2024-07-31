@@ -8,7 +8,12 @@ pub enum Shape {
 }
 
 impl Shape {
-    pub fn intersect<'a>(&self, ray: &Ray, object: &'a Object, p: &mut Intersections<'a>) {
+    pub fn intersect<'a>(
+        &self,
+        ray: &Ray,
+        object: &'a Object,
+        p: &mut Intersections<'a>,
+    ) -> Vec<Intersection<'a>> {
         match self {
             Shape::Sphere(s) => s.intersect(ray, object, p),
         }
@@ -123,9 +128,9 @@ impl Object {
         return &self.transformation;
     }
 
-    pub fn intersect<'a>(&'a self, ray: &Ray, i: &mut Intersections<'a>) {
+    pub fn intersect<'a>(&'a self, ray: &Ray, i: &mut Intersections<'a>) -> Vec<Intersection<'a>> {
         let r = (*ray).transform(&self.transformation_inverse);
-        self.shape.intersect(&r, self, i);
+        return self.shape.intersect(&r, self, i);
     }
 
     pub fn shape(&self) -> Shape {

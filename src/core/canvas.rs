@@ -30,6 +30,12 @@ impl Canvas {
         file.flush()?;
         Ok(())
     }
+
+    pub fn draw_pixel(&mut self, x: usize, y: usize, color: Color) {
+        if y < self.height && x < self.width {
+            self[y as usize][x as usize] = color;
+        }
+    }
 }
 
 fn clamp_color(color: &Color) -> (u8, u8, u8) {

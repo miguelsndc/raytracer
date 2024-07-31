@@ -21,7 +21,12 @@ impl Default for Sphere {
 }
 
 impl Sphere {
-    pub fn intersect<'a>(&self, r: &Ray, object: &'a Object, i: &mut Intersections<'a>) {
+    pub fn intersect<'a>(
+        &self,
+        r: &Ray,
+        object: &'a Object,
+        i: &mut Intersections<'a>,
+    ) -> Vec<Intersection<'a>> {
         let a = r.direction() ^ r.direction();
         let oc = r.origin() - self.center();
         let b = 2.0 * (r.direction() ^ (oc));
@@ -33,9 +38,16 @@ impl Sphere {
             let t1 = (-b - sqrt_disc) / (2.0 * a);
             let t2 = (-b + sqrt_disc) / (2.0 * a);
 
-            i.push(Intersection::new(t1, object));
-            i.push(Intersection::new(t2, object));
+            let i1 = Intersection::new(t1, object);
+            let i2 = Intersection::new(t2, object);
+
+            i.push(i1);
+            i.push(i2);
+
+            return vec![i1, i2];
         }
+
+        return vec![];
     }
 
     pub fn new(center: Point, radius: f64) -> Self {
