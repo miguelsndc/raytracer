@@ -46,6 +46,10 @@ impl Vec3 {
     pub fn normalize(&self) -> Self {
         return (*self) / self.magnitude();
     }
+
+    pub fn reflect(in_v: Vec3, normal: Vec3) -> Vec3 {
+        return in_v - normal * 2.0 * (in_v ^ normal);
+    }
 }
 
 impl PartialEq for Vec3 {

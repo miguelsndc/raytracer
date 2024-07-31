@@ -1,6 +1,6 @@
-use crate::primitives::matrix4f::Matrix4f;
+use crate::primitives::{color::Color, matrix4f::Matrix4f, point::Point, tuple::Tuple, vec3::Vec3};
 
-use super::{ray::Ray, sphere::Sphere, transforms::Transform};
+use super::{light::Material, ray::Ray, sphere::Sphere, transforms::Transform};
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub enum Shape {
@@ -16,6 +16,12 @@ impl Shape {
     ) -> Vec<Intersection<'a>> {
         match self {
             Shape::Sphere(s) => s.intersect(ray, object, p),
+        }
+    }
+
+    pub fn normal_at(&self, p: Point) -> Vec3 {
+        match self {
+            Shape::Sphere(s) => s.normal_at(p),
         }
     }
 }
@@ -107,6 +113,8 @@ pub struct Object {
     shape: Shape,
     transformation: Matrix4f,
     transformation_inverse: Matrix4f,
+    transformation_inverse_transposed: Matrix4f,
+    material: Material,
 }
 
 impl Object {
@@ -116,21 +124,43 @@ impl Object {
             shape,
             transformation: Matrix4f::identity(),
             transformation_inverse: Matrix4f::identity(),
+            transformation_inverse_transposed: Matrix4f::identity(),
+            material: Material::default(),
         };
     }
 
     pub fn set_transformation(&mut self, transformation: Matrix4f) {
         self.transformation = transformation;
         self.transformation_inverse = transformation.invert().unwrap_or(Matrix4f::identity());
+        self.transformation_inverse_transposed = self.transformation_inverse.transpose();
+    }
+
+    pub fn set_material(&mut self, material: Material) {
+        self.material = material;
     }
 
     pub fn transformation(&self) -> &Matrix4f {
         return &self.transformation;
     }
 
+    pub fn material(&self) -> Material {
+        return self.material;
+    }
+
+    pub fn set_material_color(&mut self, color: Color) {
+        self.material.color = color;
+    }
+
     pub fn intersect<'a>(&'a self, ray: &Ray, i: &mut Intersections<'a>) -> Vec<Intersection<'a>> {
         let r = (*ray).transform(&self.transformation_inverse);
         return self.shape.intersect(&r, self, i);
+    }
+
+    pub fn normal_at(&self, point: Point) -> Vec3 {
+        let obj_point = self.transformation_inverse * point;
+        let obj_normal = self.shape.normal_at(obj_point);
+        let world_normal = self.transformation_inverse_transposed * obj_normal;
+        return Vec3::new(world_normal.x(), world_normal.y(), world_normal.z()).normalize();
     }
 
     pub fn shape(&self) -> Shape {

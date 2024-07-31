@@ -1,10 +1,19 @@
-use crate::primitives::{float::ApproxEq, matrix3f::Matrix3f, tuple::Tuple};
+use crate::{
+    core::transforms::Transform,
+    primitives::{float::ApproxEq, matrix3f::Matrix3f, tuple::Tuple},
+};
 
 pub const MATRIX_SIZE: usize = 4;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Matrix4f {
     inner: [f64; MATRIX_SIZE * MATRIX_SIZE],
+}
+
+impl Transform for Matrix4f {
+    fn transform(self, transform: &super::matrix4f::Matrix4f) -> Self {
+        return (*transform) * self;
+    }
 }
 
 impl Matrix4f {

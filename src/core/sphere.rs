@@ -1,4 +1,4 @@
-use crate::primitives::{point::Point, tuple::Tuple};
+use crate::primitives::{point::Point, tuple::Tuple, vec3::Vec3};
 
 use super::{
     object::{Intersection, Intersections, Object},
@@ -50,6 +50,10 @@ impl Sphere {
         return vec![];
     }
 
+    pub fn normal_at(&self, obj_p: Point) -> Vec3 {
+        return obj_p - self.center();
+    }
+
     pub fn new(center: Point, radius: f64) -> Self {
         Sphere {
             center,
@@ -73,9 +77,11 @@ impl Sphere {
 
 #[cfg(test)]
 mod tests {
+    use core::f64;
+
     use crate::{
-        core::transforms::Transformations,
-        primitives::{matrix4f::Matrix4f, vec3::Vec3},
+        core::{light::Material, transforms::Transformations},
+        primitives::{color::Color, matrix4f::Matrix4f, vec3::Vec3},
     };
 
     use super::*;
@@ -179,5 +185,64 @@ mod tests {
         s.intersect(&r, &mut i);
 
         assert_eq!(i.len(), 0);
+    }
+
+    #[test]
+    fn normal_on_a_sphere_should_be_normalized() {
+        let s = Sphere::default();
+        let v = s.normal_at(Point::new(1.0, 0.0, 0.0));
+        assert_eq!(v.magnitude(), 1.0);
+    }
+
+    #[test]
+    fn normal_on_a_sphere_at_x_axis() {
+        let s = Sphere::default();
+        let p = Point::new(1.0, 0.0, 0.0);
+        assert_eq!(s.normal_at(p), (p - Point::zero()));
+    }
+
+    #[test]
+    fn normal_on_a_sphere_at_y_axis() {
+        let s = Sphere::default();
+        let p = Point::new(0.0, 1.0, 0.0);
+        assert_eq!(s.normal_at(p), (p - Point::zero()));
+    }
+
+    #[test]
+    fn normal_on_a_sphere_at_z_axis() {
+        let s = Sphere::default();
+        let p = Point::new(0.0, 0.0, 1.0);
+        assert_eq!(s.normal_at(p), (p - Point::zero()));
+    }
+
+    #[test]
+    fn normal_on_translated_sphere() {
+        let mut s = Object::sphere();
+        s.set_transformation(Transformations::translate(0.0, 1.0, 0.0));
+        let n = s.normal_at(Point::new(0.0, 1.70711, -0.70711));
+        assert_eq!(n, Vec3::new(0.0, 0.70711, -0.70711));
+    }
+    #[test]
+    fn normal_on_transformed_sphere() {
+        let mut s = Object::sphere();
+        let m = Transformations::scale(1.0, 0.5, 1.0)
+            * Transformations::rotate_z(f64::consts::PI / 5.0);
+        s.set_transformation(m);
+        let n = s.normal_at(Point::new(0.0, f64::sqrt(2.0) / 2.0, -f64::sqrt(2.0) / 2.0));
+        assert_eq!(n, Vec3::new(0.0, 0.97014, -0.24254));
+    }
+
+    #[test]
+    fn sphere_has_default_material() {
+        let mut s = Object::sphere();
+        assert_eq!(s.material(), Material::default());
+    }
+
+    #[test]
+    fn sphere_can_be_assigned_a_material() {
+        let mut s = Object::sphere();
+        let m = Material::new(Color::new(0.8, 0.9, 0.1), 0.2, 0.8, 0.9, 185.0);
+        s.set_material(m);
+        assert_eq!(s.material(), m);
     }
 }

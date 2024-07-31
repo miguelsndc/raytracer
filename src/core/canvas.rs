@@ -39,10 +39,16 @@ impl Canvas {
 }
 
 fn clamp_color(color: &Color) -> (u8, u8, u8) {
-    let r = f64::max(0.0, f64::min(color.r, 1.0));
-    let g = f64::max(0.0, f64::min(color.g, 1.0));
-    let b = f64::max(0.0, f64::min(color.b, 1.0));
-    return ((r * 255.0) as u8, (g * 255.0) as u8, (b * 255.0) as u8);
+    // let r = f64::max(0.0, f64::min(color.r, 1.0));
+    // let g = f64::max(0.0, f64::min(color.g, 1.0));
+    // let b = f64::max(0.0, f64::min(color.b, 1.0));
+    // return ((r * 255.0) as u8, (g * 255.0) as u8, (b * 255.0) as u8);
+
+    let r = (color.r * 255.0).clamp(0.0, 255.0).round();
+    let g = (color.g * 255.0).clamp(0.0, 255.0).round();
+    let b = (color.b * 255.0).clamp(0.0, 255.0).round();
+
+    return (r as u8, g as u8, b as u8);
 }
 
 impl std::ops::Index<usize> for Canvas {

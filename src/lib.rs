@@ -11,8 +11,9 @@ pub mod primitives {
 
 pub mod core {
     pub mod canvas;
-    pub mod ray;
+    pub mod light;
     pub mod object;
+    pub mod ray;
     pub mod sphere;
     pub mod transforms;
 }
