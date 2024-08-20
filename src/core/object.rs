@@ -2,20 +2,62 @@ use crate::primitives::{color::Color, matrix4f::Matrix4f, point::Point, tuple::T
 
 use super::{light::Material, ray::Ray, sphere::Sphere, transforms::Transform};
 
+pub struct IntersectionState<'a> {
+    pub t: f64,
+    pub object: &'a Object,
+    pub point: Point,
+    pub normalv: Vec3,
+    pub eyev: Vec3,
+    pub inside: bool,
+}
+
+impl<'a> IntersectionState<'a> {
+    pub fn new(i: Intersection<'a>, ray: Ray) -> Self {
+        let ray_pos = ray.position(i.t);
+
+        let mut normalv = i.object.normal_at(ray_pos);
+        let eyev = -ray.direction();
+        let mut inside = false;
+
+        if (normalv ^ eyev) < 0.0 {
+            normalv = -normalv;
+            inside = true;
+        }
+
+        IntersectionState {
+            t: i.t,
+            object: i.object,
+            point: ray_pos,
+            normalv,
+            inside,
+            eyev,
+        }
+    }
+}
+
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub enum Shape {
     Sphere(Sphere),
 }
 
+pub struct IntersectionResult<'a> {
+    pub ok: bool,
+    pub i: Vec<Intersection<'a>>,
+}
+
+impl<'a> IntersectionResult<'a> {
+    pub fn new(ok: bool, intersections: Vec<Intersection<'a>>) -> IntersectionResult {
+        return IntersectionResult {
+            ok,
+            i: intersections,
+        };
+    }
+}
+
 impl Shape {
-    pub fn intersect<'a>(
-        &self,
-        ray: &Ray,
-        object: &'a Object,
-        p: &mut Intersections<'a>,
-    ) -> Vec<Intersection<'a>> {
+    pub fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> IntersectionResult<'a> {
         match self {
-            Shape::Sphere(s) => s.intersect(ray, object, p),
+            Shape::Sphere(s) => s.intersect(ray, object),
         }
     }
 
@@ -147,13 +189,19 @@ impl Object {
         return self.material;
     }
 
+    // legacy
     pub fn set_material_color(&mut self, color: Color) {
         self.material.color = color;
     }
 
-    pub fn intersect<'a>(&'a self, ray: &Ray, i: &mut Intersections<'a>) -> Vec<Intersection<'a>> {
+    pub fn with_material(mut self, material: Material) -> Self {
+        self.material = material;
+        self
+    }
+
+    pub fn intersect<'a>(&'a self, ray: &Ray) -> IntersectionResult<'a> {
         let r = (*ray).transform(&self.transformation_inverse);
-        return self.shape.intersect(&r, self, i);
+        return self.shape.intersect(&r, self);
     }
 
     pub fn normal_at(&self, point: Point) -> Vec3 {
@@ -208,12 +256,10 @@ mod tests {
         let s = Object::sphere();
         let ray = Ray::new(Point::new(0.0, 0.0, -5.0), Vec3::new(0.0, 0.0, 1.0));
 
-        let mut intersections = Intersections::new();
+        let res = s.shape().intersect(&ray, &s);
 
-        s.shape().intersect(&ray, &s, &mut intersections);
-
-        assert_eq!(intersections[0].object, &s);
-        assert_eq!(intersections[1].object, &s);
+        assert_eq!(res.i[0].object, &s);
+        assert_eq!(res.i[1].object, &s);
     }
 
     #[test]
@@ -253,7 +299,7 @@ mod tests {
     }
 
     #[test]
-    fn hit_is_always_the_first_nonnegatievable_intersection() {
+    fn hit_is_always_the_first_nonnegative_intersection() {
         let s = Object::sphere();
 
         let i1 = Intersection::new(5.0, &s);
@@ -266,5 +312,19 @@ mod tests {
         intersections.sort();
 
         assert_eq!(intersections.hit(), Some(&i4));
+    }
+
+    #[test]
+    fn precomputing_intersection_states() {
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vec3::new(0.0, 0.0, 1.0));
+        let obj = Object::sphere();
+        let i = Intersection::new(4.0, &obj);
+        let c = IntersectionState::new(i, r);
+
+        assert_eq!(c.t, 4.0);
+        assert_eq!(*c.object, obj);
+        assert_eq!(c.point, Point::new(0.0, 0.0, -1.0));
+        assert_eq!(c.eyev, Vec3::new(0.0, 0.0, -1.0));
+        assert_eq!(c.normalv, Vec3::new(0.0, 0.0, -1.0));
     }
 }

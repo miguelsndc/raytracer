@@ -1,7 +1,7 @@
 use crate::primitives::{point::Point, tuple::Tuple, vec3::Vec3};
 
 use super::{
-    object::{Intersection, Intersections, Object},
+    object::{Intersection, IntersectionResult, Object},
     ray::Ray,
 };
 
@@ -21,12 +21,7 @@ impl Default for Sphere {
 }
 
 impl Sphere {
-    pub fn intersect<'a>(
-        &self,
-        r: &Ray,
-        object: &'a Object,
-        i: &mut Intersections<'a>,
-    ) -> Vec<Intersection<'a>> {
+    pub fn intersect<'a>(&self, r: &Ray, object: &'a Object) -> IntersectionResult<'a> {
         let a = r.direction() ^ r.direction();
         let oc = r.origin() - self.center();
         let b = 2.0 * (r.direction() ^ (oc));
@@ -41,13 +36,10 @@ impl Sphere {
             let i1 = Intersection::new(t1, object);
             let i2 = Intersection::new(t2, object);
 
-            i.push(i1);
-            i.push(i2);
-
-            return vec![i1, i2];
+            return IntersectionResult::new(true, vec![i1, i2]);
         }
 
-        return vec![];
+        return IntersectionResult::new(false, vec![]);
     }
 
     pub fn normal_at(&self, obj_p: Point) -> Vec3 {
@@ -98,54 +90,44 @@ mod tests {
             let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vec3::new(0.0, 0.0, 1.0));
             let s = Object::sphere();
 
-            let mut i = Intersections::new();
+            let i = s.intersect(&r);
 
-            s.intersect(&r, &mut i);
-
-            assert_eq!(i[0].t, 4.0);
-            assert_eq!(i[1].t, 6.0);
+            assert_eq!(i.i[0].t, 4.0);
+            assert_eq!(i.i[1].t, 6.0);
         }
         {
             let r = Ray::new(Point::new(0.0, 1.0, -5.0), Vec3::new(0.0, 0.0, 1.0));
             let s = Object::sphere();
 
-            let mut i = Intersections::new();
+            let i = s.intersect(&r);
 
-            s.intersect(&r, &mut i);
-
-            assert_eq!(i[0].t, 5.0);
-            assert_eq!(i[1].t, 5.0);
+            assert_eq!(i.i[0].t, 5.0);
+            assert_eq!(i.i[1].t, 5.0);
         }
         {
             let r = Ray::new(Point::new(0.0, 2.0, -5.0), Vec3::new(0.0, 0.0, 1.0));
             let s = Object::sphere();
 
-            let mut i = Intersections::new();
+            let i = s.intersect(&r);
 
-            s.intersect(&r, &mut i);
-
-            assert_eq!(i.len(), 0);
+            assert_eq!(i.i.len(), 0);
         }
         {
             let r = Ray::new(Point::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 1.0));
             let s = Object::sphere();
 
-            let mut i = Intersections::new();
-
-            s.intersect(&r, &mut i);
-            assert_eq!(i[0].t, -1.0);
-            assert_eq!(i[1].t, 1.0);
+            let i = s.intersect(&r);
+            assert_eq!(i.i[0].t, -1.0);
+            assert_eq!(i.i[1].t, 1.0);
         }
         {
             let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vec3::new(0.0, 0.0, 1.0));
             let s = Object::sphere();
 
-            let mut i = Intersections::new();
+            let i = s.intersect(&r);
 
-            s.intersect(&r, &mut i);
-
-            assert_eq!(i[0].t, -6.0);
-            assert_eq!(i[1].t, -4.0);
+            assert_eq!(i.i[0].t, -6.0);
+            assert_eq!(i.i[1].t, -4.0);
         }
     }
 
@@ -163,28 +145,25 @@ mod tests {
     fn intersecting_scaled_sphere_with_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vec3::new(0.0, 0.0, 1.0));
         let mut s = Object::sphere();
-        let mut i = Intersections::new();
-
         let t = Transformations::scale(2.0, 2.0, 2.0);
 
         s.set_transformation(t);
-        s.intersect(&r, &mut i);
+        let i = s.intersect(&r);
 
-        assert_eq!(i.len(), 2);
-        assert_eq!(i[0].t, 3.0);
-        assert_eq!(i[1].t, 7.0);
+        assert_eq!(i.i.len(), 2);
+        assert_eq!(i.i[0].t, 3.0);
+        assert_eq!(i.i[1].t, 7.0);
     }
 
     #[test]
     fn intersecting_translated_sphere_with_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vec3::new(0.0, 0.0, 1.0));
         let mut s = Object::sphere();
-        let mut i = Intersections::new();
 
         s.set_transformation(Transformations::translate(5.0, 0.0, 0.0));
-        s.intersect(&r, &mut i);
+        let i = s.intersect(&r);
 
-        assert_eq!(i.len(), 0);
+        assert_eq!(i.ok, false);
     }
 
     #[test]

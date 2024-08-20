@@ -10,10 +10,12 @@ pub mod primitives {
 }
 
 pub mod core {
+    pub mod camera;
     pub mod canvas;
     pub mod light;
     pub mod object;
     pub mod ray;
     pub mod sphere;
     pub mod transforms;
+    pub mod world;
 }

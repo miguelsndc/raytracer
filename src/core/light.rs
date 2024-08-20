@@ -1,5 +1,6 @@
 use crate::primitives::{color::Color, point::Point, vec3::Vec3};
 
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub struct PointLight {
     position: Point,
     intensity: Color,

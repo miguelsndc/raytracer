@@ -1,4 +1,8 @@
-use crate::primitives::matrix4f::{Matrix4f, MATRIX_SIZE};
+use crate::primitives::{
+    matrix4f::{Matrix4f, MATRIX_SIZE},
+    tuple::Tuple,
+    vec3::Vec3,
+};
 
 pub trait Transform {
     fn transform(self, transform: &Matrix4f) -> Self;
@@ -136,6 +140,21 @@ impl Transformations {
 
         return sh;
     }
+
+    pub fn view_transform(from: Vec3, to: Vec3, up: Vec3) -> Matrix4f {
+        let forward = (to - from).normalize();
+        let left = forward * (up.normalize());
+        let true_up = left * forward;
+
+        let orientation = Matrix4f::new_from([
+            [left.x(), left.y(), left.z(), 0.0],
+            [true_up.x(), true_up.y(), true_up.z(), 0.0],
+            [-forward.x(), -forward.y(), -forward.z(), 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]);
+
+        return orientation * Transformations::translate(-from.x(), -from.y(), -from.z());
+    }
 }
 
 pub struct TransformChainer<T> {
@@ -264,5 +283,34 @@ mod tests {
             .transform();
 
         assert_eq!(p, Point::new(15.0, 0.0, 7.0));
+    }
+
+    #[test]
+    fn view_transformation_for_default_orientation() {
+        let t = Transformations::view_transform(
+            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(0.0, 0.0, -1.0),
+            Vec3::new(0.0, 1.0, 0.0),
+        );
+        assert_eq!(t, Matrix4f::identity());
+    }
+
+    #[test]
+    fn view_transformation_for_positive_z_axis() {
+        let t = Transformations::view_transform(
+            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(0.0, 0.0, 1.0),
+            Vec3::new(0.0, 1.0, 0.0),
+        );
+        assert_eq!(t, Transformations::scale(-1.0, 1.0, -1.0));
+    }
+    #[test]
+    fn view_transform_moves_world() {
+        let t = Transformations::view_transform(
+            Vec3::new(0.0, 0.0, 8.0),
+            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(0.0, 1.0, 0.0),
+        );
+        assert_eq!(t, Transformations::translate(0.0, 0.0, -8.0));
     }
 }
